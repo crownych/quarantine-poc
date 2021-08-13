@@ -1,0 +1,49 @@
+sudo: required
+os: linux
+dist: bionic
+language: python
+python:
+  - "3.7"
+git:
+  quiet: true
+  submodules: false
+branches:
+  only:
+    - master
+
+install:
+  - pip install --user yamllint
+  - snap install yq
+
+script:
+  - yamllint images
+
+before_deploy:
+  # Prepare to package
+  - bash ${TRAVIS_BUILD_DIR}/scripts/deploy/deploy.sh
+  # Package codedeploy artifact
+  - zip -qr latest appspec.yml scripts
+  - test -d codedeploy || mkdir codedeploy
+  - mv latest.zip codedeploy/artifact-${TRAVIS_COMMIT}.zip 
+
+deploy:
+  - provider: s3
+    region: ${AWS_DEFAULT_REGION}
+    access_key_id: ${AWS_ACCESS_KEY_ID}
+    secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+    bucket: ${S3_TARGET_BUCKET}
+    skip_cleanup: true
+    local_dir: codedeploy
+    on:
+      branch: master      
+  - provider: codedeploy
+    access_key_id: ${AWS_ACCESS_KEY_ID}
+    secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+    bucket: ${S3_TARGET_BUCKET}
+    key: artifact-${TRAVIS_COMMIT}.zip
+    application: ${CODEDEPLOY_APPLICATION_NAME}
+    deployment_group: master
+    region: ${AWS_DEFAULT_REGION}
+    wait_until_deployed: true
+    on:
+      branch: master
