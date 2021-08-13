@@ -12,8 +12,8 @@ branches:
     - master
 
 install:
-  - pip install --user yamllint
-  - snap install yq
+  - pip install yamllint
+  - sudo snap install yq
 
 script:
   - yamllint images
@@ -24,7 +24,7 @@ before_deploy:
   # Package codedeploy artifact
   - zip -qr latest appspec.yml scripts
   - test -d codedeploy || mkdir codedeploy
-  - mv latest.zip codedeploy/artifact-${TRAVIS_COMMIT}.zip 
+  - mv latest.zip codedeploy/artifact-${TRAVIS_COMMIT}.zip
 
 deploy:
   - provider: s3
@@ -35,7 +35,7 @@ deploy:
     skip_cleanup: true
     local_dir: codedeploy
     on:
-      branch: master      
+      branch: master
   - provider: codedeploy
     access_key_id: ${AWS_ACCESS_KEY_ID}
     secret_access_key: ${AWS_SECRET_ACCESS_KEY}
