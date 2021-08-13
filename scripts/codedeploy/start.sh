@@ -1,32 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-unset image images repos tag_exists digest vulnerabilities quarantine_repo slsp_repos OIFS
-
 SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-#echo "PWD: ${PWD}"
-#cat "$SCRIPTS_DIR/image_manifest.txt"
-#echo "on-premise deploy done"
-
 # quay info 
-QUAY_USER='quayadmin'
-QUAY_PASS='password'
 QUAY_SERVER='example-registry-quay-openshift-operators.router-default.apps-crc.testing'
 QUAY_QUARANTINE="$QUAY_SERVER/quarantine"
 QUAY_SANDBOX="$QUAY_SERVER/sandbox"
 QUAY_LAB="$QUAY_SERVER/lab"
 QUAY_STAGING="$QUAY_SERVER/staging"
 QUAY_PROD="$QUAY_SERVER/production"
-QUAY_TOKEN='4gcaRg2u10Slo42sF66CoiAQHNnZJbisYuBGOwDN'
 
 # GitHub info
 GITHUB_REPO='crownych/images'
-GITHUB_TOKEN='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'
 
 # fetch pr info
-pr=$(yq e '.pr')
-pr_sha=$(yq e '.sha')
+pr="cat ${SCRIPTS_DIR}/pull_request.txt"
 
 # fetch image list
 images=$(cat ${SCRIPTS_DIR}/image_manifest.txt)
@@ -97,7 +86,7 @@ for image in $images; do
         -d "{\"body\":\"$comment\"}"
 
         if [ $vulnerabilities -eq 0 ]; then
-            if [ -z "$pr_sha" ]; then
+            if [ $pr = 'false' ]; then
                 # 當 PR merge 時，push image to sandbox, lab, staging, production
                 slsp_repos=("$QUAY_SANDBOX/$repo" "$QUAY_LAB/$repo" "$QUAY_STAGING/$repo" "$QUAY_PROD/$repo")
                 for slsp_repo in ${slsp_repos[@]}; do

@@ -1,2 +1,0 @@
-docker.io/library/nginx:1.20.0
-docker.io/library/nginx:1.21.0
