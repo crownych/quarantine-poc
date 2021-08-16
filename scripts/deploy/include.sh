@@ -30,10 +30,14 @@ function createImageManifest() {
     fi
 
     if [ "${TRAVIS_PULL_REQUEST}" = 'false' ]; then
-        _images_diff_results=$(git diff HEAD~ -- images/)
+        echo 'TRAVIS_PULL_REQUEST is false'
+        _images_diff_results=$(git diff HEAD~ ${TRAVIS_COMMIT} -- images/)
     else
+        echo 'TRAVIS_PULL_REQUEST is not false'
         _images_diff_results=$(git diff origin/master...${TRAVIS_PULL_REQUEST_SHA} -- images/)
     fi
+
+    echo "_images_diff_results: $_images_diff_results"
 
     if [ ! -z "_images_diff_results" ]; then
         _images_diff_results=$(echo "$_images_diff_results" | { grep -E "^\+{3}\sb\/images\/.+$" || :; })

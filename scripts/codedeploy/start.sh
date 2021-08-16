@@ -84,11 +84,6 @@ for image in $images; do
         fi
         echo "vulnerabilities: $vulnerabilities"
 
-        echo "=== GitHub API info ==="
-        echo "https://api.github.com/repos/$GITHUB_REPO/issues/$pr/comments"
-        echo "Authorization: Bearer $GITHUB_TOKEN"
-        echo "{\"body\":\"$comment\"}"
-
         curl -X POST "https://api.github.com/repos/$GITHUB_REPO/issues/$pr/comments" \
         -H "Accept: application/vnd.github.v3+json" \
         -H "Authorization: Bearer $GITHUB_TOKEN" \

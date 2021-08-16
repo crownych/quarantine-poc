@@ -46,9 +46,7 @@ function deployArtifact() {
         --s3-location bucket=${S3_TARGET_BUCKET},key=$deploy_artifact,bundleType=zip | jq -r '.deploymentId')
     echo "Triggered deplyment: $deploymentId"
     aws deploy wait deployment-successful --deployment-id "$deploymentId"
-    deploymentResult=$(aws deploy get-deployment --deployment-id "$deploymentId")
-    echo "Deplyment result: $deploymentResult"
-    deplymentStatus=$(echo $deploymentResult | jq -r '.deploymentInfo.status')
+    deploymentStatus=$(aws deploy get-deployment --deployment-id "$deploymentId" | jq -r '.deploymentInfo.status')
     echo "Deplyment status: $deploymentStatus"
 }
 
