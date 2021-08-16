@@ -1,4 +1,0 @@
-name: nginx
-image: nginx
-versions:
-  - 1.20.0

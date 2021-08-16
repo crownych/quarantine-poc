@@ -109,7 +109,16 @@ for image in $images; do
             echo 'High/Medium vulnerabilities found'
         fi
     else
-        echo 'image already exists'
+        if [ "$pr" = 'false' ]; then
+            # 當 PR merge 時，push image to sandbox, lab, staging, production
+            slsp_repos=("$QUAY_SANDBOX/$repo" "$QUAY_LAB/$repo" "$QUAY_STAGING/$repo" "$QUAY_PROD/$repo")
+            for slsp_repo in ${slsp_repos[@]}; do
+                podman tag $image $slsp_repo
+                podman push --tls-verify=false $image $slsp_repo
+            done
+        else
+            echo 'image already exists'
+        fi    
     fi    
 
 done
