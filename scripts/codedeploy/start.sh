@@ -33,7 +33,11 @@ for image in $images; do
     OIFS="$IFS"
     IFS='/'
     read -a image_parts <<< "$image"
-    repo="${image_parts[2]}"
+    if [ ${#image_parts[@]} -eq 1 ]; then
+        repo="${image_parts[0]}"
+    else
+        repo="${image_parts[2]}"
+    fi
     repos+=($repo)
     IFS=':'
     read -a repo_parts <<< "$repo"
