@@ -12,13 +12,13 @@ QUAY_STAGING="$QUAY_SERVER/staging"
 QUAY_PROD="$QUAY_SERVER/production"
 
 # GitHub info
-GITHUB_REPO='crownych/images'
+GITHUB_REPO='crownych/quarantine-poc'
 
 # fetch pr info
-pr="cat ${SCRIPTS_DIR}/pull_request.txt"
+pr=$(cat $SCRIPTS_DIR/pull_request.txt)
 
 # fetch image list
-images=$(cat ${SCRIPTS_DIR}/image_manifest.txt)
+images=$(cat $SCRIPTS_DIR/image_manifest.txt)
 
 # login private registry
 podman login --tls-verify=false -u $QUAY_USER -p $QUAY_PASS $QUAY_SERVER
@@ -69,7 +69,7 @@ for image in $images; do
         # get security vulnerabilities
         scan_result=$(curl -L -k -s -H "Authorization: Bearer ${QUAY_TOKEN}" "https://$QUAY_SERVER/api/v1/repository/quarantine/$repo_name/manifest/$digest/security")
         feature_length=$(echo $scan_result | jq '.data.Layer.Features | length')
-        if [ feature_length -gt 0 ]; then
+        if [ $feature_length -gt 0 ]; then
             vulnerabilities=$(echo "$scan_result" | jq -r '.data.Layer.Features[].Vulnerabilities[] | select(.Severity == "High" or .Severity == "Medium")' | jq -n '[inputs] | length')
             comment="[Security scan report](https://$QUAY_SERVER/repository/quarantine/$repo_name/manifest/$digest?tab=vulnerabilities)"
         else
@@ -80,13 +80,18 @@ for image in $images; do
         fi
         echo "vulnerabilities: $vulnerabilities"
 
-        curl -X POST "https://api.github.com/repos/crownych/gs-rest-service/issues/14/comments" \
+        echo "=== GitHub API info ==="
+        echo "https://api.github.com/repos/$GITHUB_REPO/issues/$pr/comments"
+        echo "Authorization: Bearer $GITHUB_TOKEN"
+        echo "{\"body\":\"$comment\"}"
+
+        curl -X POST "https://api.github.com/repos/$GITHUB_REPO/issues/$pr/comments" \
         -H "Accept: application/vnd.github.v3+json" \
         -H "Authorization: Bearer $GITHUB_TOKEN" \
         -d "{\"body\":\"$comment\"}"
 
         if [ $vulnerabilities -eq 0 ]; then
-            if [ $pr = 'false' ]; then
+            if [ "$pr" = 'false' ]; then
                 # 當 PR merge 時，push image to sandbox, lab, staging, production
                 slsp_repos=("$QUAY_SANDBOX/$repo" "$QUAY_LAB/$repo" "$QUAY_STAGING/$repo" "$QUAY_PROD/$repo")
                 for slsp_repo in ${slsp_repos[@]}; do
