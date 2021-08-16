@@ -29,11 +29,11 @@ function createImageManifest() {
         touch $_image_manifest_file
     fi
 
+    echo "TRAVIS_COMMIT_RANGE: ${TRAVIS_COMMIT_RANGE}"
+
     if [ "${TRAVIS_PULL_REQUEST}" = 'false' ]; then
-        echo 'TRAVIS_PULL_REQUEST is false'
-        _images_diff_results=$(git diff HEAD~ ${TRAVIS_COMMIT} -- images/)
+        _images_diff_results=$(git diff ${TRAVIS_COMMIT_RANGE} -- images/)
     else
-        echo 'TRAVIS_PULL_REQUEST is not false'
         _images_diff_results=$(git diff origin/master...${TRAVIS_PULL_REQUEST_SHA} -- images/)
     fi
 
@@ -45,8 +45,13 @@ function createImageManifest() {
         do 
             if [ ! -z "$_images_diff_result" ]; then
                 _gitFile=$(echo "$_images_diff_result" | cut -c7-)
+                echo "_gitFile: $_gitFile"
                 _image=$(cat $_gitFile | yq e '.image' -)
-                _versions=$(git diff origin/master -- "$_gitFile" | { grep -E "^\+{1}\s{2}-.+$" || :; })
+                if [ "${TRAVIS_PULL_REQUEST}" = 'false' ]; then
+                    _versions=$(git diff ${TRAVIS_COMMIT_RANGE} -- "$_gitFile" | { grep -E "^\+{1}\s{2}-.+$" || :; })
+                else
+                    _versions=$(git diff origin/master...${TRAVIS_PULL_REQUEST_SHA} -- "$_gitFile" | { grep -E "^\+{1}\s{2}-.+$" || :; })
+                fi                
                 echo "$_versions" | while read -r -d$'\n' _version
                 do
                     if [ ! -z "$_version" ]; then
