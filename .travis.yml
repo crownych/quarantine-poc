@@ -17,18 +17,15 @@ install:
 
 script:
   - yamllint images
-  - |
-    if [ ${TRAVIS_PULL_REQUEST} != "false" ]; then
-      bash ${TRAVIS_BUILD_DIR}/scripts/deploy/quarantine.sh
-    fi
+  - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then bash ${TRAVIS_BUILD_DIR}/scripts/deploy/quarantine.sh; fi
 
 before_deploy:
   # Prepare codedeploy artifact
   - bash ${TRAVIS_BUILD_DIR}/scripts/deploy/deploy.sh
   # Package codedeploy artifact
   - zip -qr latest appspec.yml scripts
-  - test -d "${deploy_dir}" || mkdir "${deploy_dir}"
-  - mv latest.zip "${deploy_dir}/${deploy_artifact}"
+  - test -d codedeploy || mkdir codedeploy
+  - mv latest.zip codedeploy/artifact-${TRAVIS_COMMIT}.zip
 
 deploy:
   - provider: s3

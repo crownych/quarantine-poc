@@ -40,13 +40,18 @@ function pushArtifactToS3() {
 function deployArtifact() {
     printFunctionName
 
-    aws deploy create-deployment \
-    --application-name ${CODEDEPLOY_APPLICATION_NAME} \
-    --deployment-group-name master \
-    --s3-location bucket=${S3_TARGET_BUCKET},key=$deploy_artifact,bundleType=zip
+    deploymentId=$(aws deploy create-deployment \
+        --application-name ${CODEDEPLOY_APPLICATION_NAME} \
+        --deployment-group-name master \
+        --s3-location bucket=${S3_TARGET_BUCKET},key=$deploy_artifact,bundleType=zip | jq -r '.deploymentId')
+    echo "Triggered deplyment: $deploymentId"
+    aws deploy wait deployment-successful --deployment-id "$deploymentId"
+    deploymentStatus=$(aws deploy get-deployment --deployment-id "$deploymentId" | jq -r '.deploymentInfo.status')
+    echo "Deplyment status: $deploymentStatus"
 }
 
 function main() {
+    echo "exec quarantine..."
     cd "${TRAVIS_BUILD_DIR}"
 
     prepareArtifact
