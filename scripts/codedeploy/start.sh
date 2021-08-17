@@ -74,7 +74,7 @@ for image in $images; do
         scan_result=$(curl -L -k -s -H "Authorization: Bearer ${QUAY_TOKEN}" "https://$QUAY_SERVER/api/v1/repository/quarantine/$repo_name/manifest/$digest/security")
         feature_length=$(echo $scan_result | jq '.data.Layer.Features | length')
         if [ $feature_length -gt 0 ]; then
-            vulnerabilities=$(echo "$scan_result" | jq -r '.data.Layer.Features[].Vulnerabilities[] | select(.Severity == "High" or .Severity == "Medium")' | jq -n '[inputs] | length')
+            vulnerabilities=$(echo "$scan_result" | jq -r '.data.Layer.Features[].Vulnerabilities[] | select(.Severity == "Critical" or .Severity == "High" or .Severity == "Medium")' | jq -n '[inputs] | length')
             comment="[Security scan report](https://$QUAY_SERVER/repository/quarantine/$repo_name/manifest/$digest?tab=vulnerabilities)"
         else
             # Unsupported 打下列 API 回應範例如下，features length 為 0：
@@ -105,8 +105,14 @@ for image in $images; do
                 -d '{"commit_title":"Image scan passed"}'
             fi    
         else
-            # add comment to PR (not completed yet)
-            echo 'High/Medium vulnerabilities found'
+            # add comment to PR
+            comment='High/Medium vulnerabilities found'
+            curl -X POST "https://api.github.com/repos/$GITHUB_REPO/issues/$pr/comments" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -d "{\"body\":\"$comment\"}"
+            
+            echo "$comment"
         fi
     else
         if [ "$pr" = 'false' ]; then
