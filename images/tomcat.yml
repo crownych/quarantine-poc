@@ -4,3 +4,4 @@ image: docker.io/library/tomcat
 versions:
   - 8.5.70
   - 9.0
+  - 10.0
