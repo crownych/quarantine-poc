@@ -1,0 +1,5 @@
+---
+name: ubuntu
+image: ubuntu
+versions:
+  - 18.04
