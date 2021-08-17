@@ -1,0 +1,5 @@
+---
+name: tomcat
+image: docker.io/library/tomcat
+versions:
+  - 8.5.70
